@@ -1,0 +1,16 @@
+{
+    "name": "muno92/asn1-tools",
+    "require": {
+        "php": ">=8.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.5",
+        "phpstan/phpstan": "^2.1",
+        "symplify/easy-coding-standard": "^13.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Asn1Tools\\": "src/"
+        }
+    }
+}
