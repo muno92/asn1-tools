@@ -20,6 +20,6 @@ class AsnReaderTest extends TestCase
     public function testBerEncodingNotSupported(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
+        new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
     }
 }
