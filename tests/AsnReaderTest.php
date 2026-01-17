@@ -12,7 +12,7 @@ class AsnReaderTest extends TestCase
 {
     public function testReadFirstSequence(): void
     {
-        $asnReader = new AsnReader(file_get_contents('./fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $this->assertSame(Asn1Tag::SEQUENCE, $asnReader->tag);
     }
@@ -20,6 +20,6 @@ class AsnReaderTest extends TestCase
     public function testBerEncodingNotSupported(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $asnReader = new AsnReader(file_get_contents('./fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
     }
 }
