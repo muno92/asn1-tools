@@ -15,6 +15,8 @@ class AsnReaderTest extends TestCase
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $this->assertSame(Asn1Tag::SEQUENCE, $asnReader->tag);
+        $this->assertSame(3405, $asnReader->length);
+        $this->assertSame(3405, strlen($asnReader->contents));
     }
 
     public function testBerEncodingNotSupported(): void
