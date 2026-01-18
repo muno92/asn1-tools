@@ -70,6 +70,6 @@ class AsnReader
      */
     private function lengthIsShortForm(int $length): bool
     {
-        return $length & 0x80 === 0;
+        return ($length & 0x80) === 0;
     }
 }
