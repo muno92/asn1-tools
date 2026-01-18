@@ -24,4 +24,12 @@ class AsnReaderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
     }
+
+    public function testReadSequenceContent(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $sequence = $asnReader->readSequence();
+
+        $this->assertSame(Asn1Tag::OBJECT_IDENTIFIER, $sequence->tag);
+    }
 }

@@ -11,6 +11,7 @@ readonly class AsnReader
     public Asn1Tag $tag;
     public int $length;
     public string $contents;
+    private AsnEncodingRules $encodingRule;
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule)
     {
@@ -31,6 +32,12 @@ readonly class AsnReader
         }
 
         $this->contents = substr($bytes, 2 + $lengthBytesCount, $this->length);
+        $this->encodingRule = $encodingRule;
+    }
+
+    public function readSequence(): AsnReader
+    {
+        return new AsnReader($this->contents, $this->encodingRule);
     }
 
     private function parseLength(string $bytes): int
