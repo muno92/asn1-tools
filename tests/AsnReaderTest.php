@@ -1,6 +1,6 @@
 <?php
 
-namespace tests;
+namespace Asn1Tools\Tests;
 
 use Asn1Tools\AsnReader;
 use Asn1Tools\Enum\Asn1Tag;
