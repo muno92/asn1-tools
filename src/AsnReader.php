@@ -12,7 +12,8 @@ class AsnReader
     public readonly int $length;
     public readonly string $contents;
     private readonly AsnEncodingRules $encodingRule;
-    private int $lengthBytesCount;
+    private string $bytes;
+    private int $offset;
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule)
     {
@@ -20,20 +21,17 @@ class AsnReader
             throw new InvalidArgumentException('BER encoding is not supported yet.');
         }
 
-        $this->tag = Asn1Tag::from(ord($bytes[0]));
-        $this->length = $this->readLength(substr($bytes, 1));
+        $this->bytes = $bytes;
+        $this->offset = 0;
+        $this->encodingRule = $encodingRule;
 
-        if ($this->lengthBytesCount > 127) {
-            throw new InvalidArgumentException('Length bytes exceed maximum allowed size.');
-        }
+        $this->tag = Asn1Tag::from($this->readByte());
+        $this->length = $this->readLength();
+        $this->contents = substr($bytes, $this->offset, $this->length);
 
-        $remainingBytes = strlen($bytes) - 2 - $this->lengthBytesCount;
-        if ($remainingBytes < $this->length) {
+        if (strlen($this->contents) < $this->length) {
             throw new InvalidArgumentException('Insufficient bytes for ASN.1 contents.');
         }
-
-        $this->contents = substr($bytes, 2 + $this->lengthBytesCount, $this->length);
-        $this->encodingRule = $encodingRule;
     }
 
     public function readSequence(): AsnReader
@@ -41,22 +39,26 @@ class AsnReader
         return new AsnReader($this->contents, $this->encodingRule);
     }
 
-    private function readLength(string $bytes): int
+    private function readByte(): int
     {
-        $firstLengthByte = ord($bytes[0]);
+        return ord($this->bytes[$this->offset++]);
+    }
+
+    private function readLength(): int
+    {
+        $firstLengthByte = $this->readByte();
 
         if ($this->lengthIsShortForm($firstLengthByte)) {
-            $this->lengthBytesCount = 1;
             return $firstLengthByte;
         }
 
-        $this->lengthBytesCount = $firstLengthByte & 0x7F;
+        $lengthBytesCount = $firstLengthByte & 0x7F;
 
         $length = 0;
         // In long form, the length is specified as multiple bytes
         // e.g. 10000010 (0x82) means the next 2 bytes (16 bits) represent the length
-        for ($i = 0; $i < $this->lengthBytesCount; $i++) {
-            $length = ($length << 8) | ord($bytes[1 + $i]);
+        for ($i = 0; $i < $lengthBytesCount; $i++) {
+            $length = ($length << 8) | $this->readByte();
         }
         return $length;
     }
