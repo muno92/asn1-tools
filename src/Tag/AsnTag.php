@@ -6,7 +6,7 @@ readonly class AsnTag
 {
     public int $value;
 
-    public function __construct(public TagClass $class = TagClass::Universal, int $number)
+    public function __construct(public TagClass $class, int $number)
     {
         if ($this->class === TagClass::Universal) {
             // Check if the number corresponds to a known UniversalTag
