@@ -1,8 +1,8 @@
 <?php
 
-namespace Asn1Tools\Enum;
+namespace Asn1Tools\Tag;
 
-enum Asn1Tag: int
+enum UniversalTag: int
 {
     case OBJECT_IDENTIFIER = 0x06;
     case SEQUENCE = 0x30;

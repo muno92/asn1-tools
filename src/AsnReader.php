@@ -2,13 +2,14 @@
 
 namespace Asn1Tools;
 
-use Asn1Tools\Enum\Asn1Tag;
 use Asn1Tools\Enum\AsnEncodingRules;
+use Asn1Tools\Tag\AsnTag;
+use Asn1Tools\Tag\TagClass;
 use InvalidArgumentException;
 
 class AsnReader
 {
-    public readonly Asn1Tag $tag;
+    public readonly AsnTag $tag;
     private readonly int $headerLength;
     public readonly int $length;
     private int $totalLength {
@@ -19,7 +20,7 @@ class AsnReader
     private readonly string $bytes;
     private int $offset;
 
-    public function __construct(string $bytes, AsnEncodingRules $encodingRule)
+    public function __construct(string $bytes, AsnEncodingRules $encodingRule, TagClass $tagClass = TagClass::Universal)
     {
         if ($encodingRule === AsnEncodingRules::BER) {
             throw new InvalidArgumentException('BER encoding is not supported yet.');
@@ -29,7 +30,7 @@ class AsnReader
         $this->offset = 0;
         $this->encodingRule = $encodingRule;
 
-        $this->tag = Asn1Tag::from($this->readByte());
+        $this->tag = new AsnTag($tagClass, $this->readByte());
         $this->length = $this->readLength();
         $this->headerLength = $this->offset;
         $this->contents = substr($bytes, $this->offset, $this->length);
@@ -41,7 +42,22 @@ class AsnReader
 
     public function readSequence(): AsnReader
     {
-        return new AsnReader($this->contents, $this->encodingRule);
+        return new AsnReader($this->readRemainingBytes(), $this->encodingRule);
+    }
+
+    public function readSequenceWithTagNumber(TagClass $tagClass, int $int): AsnReader
+    {
+        $asnReader = new AsnReader($this->readRemainingBytes(), $this->encodingRule, $tagClass);
+
+        if ($asnReader->tag->value !== $int) {
+            throw new InvalidArgumentException(sprintf(
+                'Expected tag number %d but found %d.',
+                $int,
+                $asnReader->tag->value
+            ));
+        }
+
+        return $asnReader;
     }
 
     public function readObjectIdentifier(): string
@@ -86,6 +102,11 @@ class AsnReader
             $length = ($length << 8) | $this->readByte();
         }
         return $length;
+    }
+
+    private function readRemainingBytes(): string
+    {
+        return substr($this->contents, $this->offset - $this->headerLength);
     }
 
     /**
