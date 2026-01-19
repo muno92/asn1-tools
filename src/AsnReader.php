@@ -13,7 +13,7 @@ class AsnReader
     public readonly int $length;
     public readonly string $contents;
     private readonly AsnEncodingRules $encodingRule;
-    private string $bytes;
+    private readonly string $bytes;
     private int $offset;
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule)
