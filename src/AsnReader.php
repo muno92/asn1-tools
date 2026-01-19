@@ -11,6 +11,9 @@ class AsnReader
     public readonly Asn1Tag $tag;
     private readonly int $headerLength;
     public readonly int $length;
+    private int $totalLength {
+        get => $this->headerLength + $this->length;
+    }
     public readonly string $contents;
     private readonly AsnEncodingRules $encodingRule;
     private readonly string $bytes;
@@ -49,7 +52,7 @@ class AsnReader
         $oid[] = intdiv($firstByte, 40);
         $oid[] = $firstByte % 40;
 
-        while ($this->offset < $this->headerLength + $this->length) {
+        while ($this->offset < $this->totalLength) {
             $value = 0;
             do {
                 $byte = $this->readByte();
