@@ -9,6 +9,7 @@ use InvalidArgumentException;
 class AsnReader
 {
     public readonly Asn1Tag $tag;
+    private readonly int $headerLength;
     public readonly int $length;
     public readonly string $contents;
     private readonly AsnEncodingRules $encodingRule;
@@ -27,6 +28,7 @@ class AsnReader
 
         $this->tag = Asn1Tag::from($this->readByte());
         $this->length = $this->readLength();
+        $this->headerLength = $this->offset;
         $this->contents = substr($bytes, $this->offset, $this->length);
 
         if (strlen($this->contents) < $this->length) {
@@ -37,6 +39,26 @@ class AsnReader
     public function readSequence(): AsnReader
     {
         return new AsnReader($this->contents, $this->encodingRule);
+    }
+
+    public function readObjectIdentifier(): string
+    {
+        $oid = [];
+
+        $firstByte = $this->readByte();
+        $oid[] = intdiv($firstByte, 40);
+        $oid[] = $firstByte % 40;
+
+        while ($this->offset < $this->headerLength + $this->length) {
+            $value = 0;
+            do {
+                $byte = $this->readByte();
+                $value = ($value << 7) | ($byte & 0x7F);
+            } while (($byte & 0x80) !== 0);
+            $oid[] = $value;
+        }
+
+        return implode('.', $oid);
     }
 
     private function readByte(): int

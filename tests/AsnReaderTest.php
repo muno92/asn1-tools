@@ -25,11 +25,12 @@ class AsnReaderTest extends TestCase
         new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
     }
 
-    public function testReadSequenceContent(): void
+    public function testReadSequenceObjectIdentifier(): void
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
 
         $this->assertSame(Asn1Tag::OBJECT_IDENTIFIER, $sequence->tag);
+        $this->assertSame('1.2.840.113549.1.7.2', $sequence->readObjectIdentifier());
     }
 }
