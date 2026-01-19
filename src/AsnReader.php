@@ -2,7 +2,6 @@
 
 namespace Asn1Tools;
 
-use Asn1Tools\Enum\AsnEncodingRules;
 use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
 use InvalidArgumentException;

@@ -2,8 +2,8 @@
 
 namespace Asn1Tools\Tests;
 
+use Asn1Tools\AsnEncodingRules;
 use Asn1Tools\AsnReader;
-use Asn1Tools\Enum\AsnEncodingRules;
 use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use InvalidArgumentException;

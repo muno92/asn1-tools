@@ -1,6 +1,6 @@
 <?php
 
-namespace Asn1Tools\Enum;
+namespace Asn1Tools;
 
 enum AsnEncodingRules
 {
