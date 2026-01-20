@@ -19,7 +19,7 @@ class AsnReader
     private readonly string $bytes;
     private int $offset;
 
-    public function __construct(string $bytes, AsnEncodingRules $encodingRule, TagClass $tagClass = TagClass::Universal)
+    public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $tag = null)
     {
         if ($encodingRule === AsnEncodingRules::BER) {
             throw new InvalidArgumentException('BER encoding is not supported yet.');
@@ -29,7 +29,9 @@ class AsnReader
         $this->offset = 0;
         $this->encodingRule = $encodingRule;
 
-        $this->tag = new AsnTag($tagClass, $this->readByte());
+        $this->tag = $tag !== null && $tag->class !== TagClass::Universal
+            ? AsnTag::specified($tag->class, $this->readByte(), $tag, true)
+            : AsnTag::universal($this->readByte());
         $this->length = $this->readLength();
         $this->headerLength = $this->offset;
         $this->contents = substr($bytes, $this->offset, $this->length);
@@ -44,19 +46,9 @@ class AsnReader
         return new AsnReader($this->readRemainingBytes(), $this->encodingRule);
     }
 
-    public function readSequenceWithTagNumber(TagClass $tagClass, int $int): AsnReader
+    public function readSequenceWithTagNumber(AsnTag $tag): AsnReader
     {
-        $asnReader = new AsnReader($this->readRemainingBytes(), $this->encodingRule, $tagClass);
-
-        if ($asnReader->tag->value !== $int) {
-            throw new InvalidArgumentException(sprintf(
-                'Expected tag number %d but found %d.',
-                $int,
-                $asnReader->tag->value
-            ));
-        }
-
-        return $asnReader;
+        return new AsnReader($this->readRemainingBytes(), $this->encodingRule, $tag);
     }
 
     public function readObjectIdentifier(): string

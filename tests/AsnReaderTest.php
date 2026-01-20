@@ -4,6 +4,7 @@ namespace Asn1Tools\Tests;
 
 use Asn1Tools\AsnEncodingRules;
 use Asn1Tools\AsnReader;
+use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use InvalidArgumentException;
@@ -41,8 +42,8 @@ class AsnReaderTest extends TestCase
         $sequence = $asnReader->readSequence();
         $sequence->readObjectIdentifier();
 
-        $content = $sequence->readSequenceWithTagNumber(TagClass::ContextSpecific, 0);
-        $this->assertSame(0, $content->tag->value);
+        $content = $sequence->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $this->assertSame(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true)->value, $content->tag->value);
     }
 
     public function testReadContentWithInvalidTagClass(): void
@@ -52,7 +53,7 @@ class AsnReaderTest extends TestCase
         $sequence->readObjectIdentifier();
 
         $this->expectException(InvalidArgumentException::class);
-        $sequence->readSequenceWithTagNumber(TagClass::Application, 0);
+        $sequence->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::Application, 0, true));
     }
 
     public function testReadContentWithInvalidTagNumber(): void
@@ -62,6 +63,6 @@ class AsnReaderTest extends TestCase
         $sequence->readObjectIdentifier();
 
         $this->expectException(InvalidArgumentException::class);
-        $sequence->readSequenceWithTagNumber(TagClass::ContextSpecific, 1);
+        $sequence->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 1, true));
     }
 }
