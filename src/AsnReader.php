@@ -30,7 +30,7 @@ class AsnReader
         $this->encodingRule = $encodingRule;
 
         $this->tag = $tag !== null && $tag->class !== TagClass::Universal
-            ? AsnTag::specified($tag->class, $this->readByte(), $tag, true)
+            ? AsnTag::specified($tag->class, $this->readByte(), $tag, $tag->constructed)
             : AsnTag::universal($this->readByte());
         $this->length = $this->readLength();
         $this->headerLength = $this->offset;
