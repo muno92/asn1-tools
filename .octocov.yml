@@ -1,0 +1,19 @@
+coverage:
+  paths:
+    - coverage.xml
+  badge:
+    path: coverage.svg
+push:
+codeToTestRatio:
+  code:
+    - src/**/*.php
+  test:
+    - tests/**/*.php
+diff:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}
+comment:
+  if: is_pull_request
+report:
+  datastores:
+    - artifact://${GITHUB_REPOSITORY}

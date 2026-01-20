@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,7 +19,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.5
-          extensions: dom, json, libxml, mbstring, xml, xmlwriter
+          extensions: dom, json, libxml, mbstring, xml, xmlwriter, xdebug
 
       - name: Cache Composer packages
         id: composer-cache
@@ -35,5 +39,8 @@ jobs:
       - name: Run PHPStan
         run: vendor/bin/phpstan analyse
 
-      - name: Run PHPUnit tests
-        run: vendor/bin/phpunit
+      - name: Run PHPUnit tests with coverage
+        run: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=coverage.xml
+
+      - name: Run octocov
+        uses: k1LoW/octocov-action@v1
