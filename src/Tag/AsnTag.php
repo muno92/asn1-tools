@@ -13,6 +13,19 @@ readonly class AsnTag
             $this->value = UniversalTag::from($number)->value;
             return;
         }
+
+        $firstTwoBitsOfTagClass = $this->class->value << 6;
+        $firstTwoBitsOfNumber = $number & 0xC0;
+        if ($firstTwoBitsOfTagClass !== $firstTwoBitsOfNumber) {
+            throw new \InvalidArgumentException(sprintf(
+                'First two bits of tag class expect to be %02b but found %02b for tag number %d in class %s.',
+                $this->class->value,
+                $firstTwoBitsOfNumber >> 6,
+                $number,
+                $this->class->name
+            ));
+        }
+
         $this->value = $number;
     }
 }

@@ -45,6 +45,16 @@ class AsnReaderTest extends TestCase
         $this->assertSame(0, $content->tag->value);
     }
 
+    public function testReadContentWithInvalidTagClass(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $sequence = $asnReader->readSequence();
+        $sequence->readObjectIdentifier();
+
+        $this->expectException(InvalidArgumentException::class);
+        $sequence->readSequenceWithTagNumber(TagClass::Application, 0);
+    }
+
     public function testReadContentWithInvalidTagNumber(): void
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);

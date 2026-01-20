@@ -105,7 +105,7 @@ class AsnReader
 
     private function readRemainingBytes(): string
     {
-        return substr($this->contents, $this->offset - $this->headerLength);
+        return substr($this->bytes, $this->offset);
     }
 
     /**
