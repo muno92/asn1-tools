@@ -19,7 +19,7 @@ class AsnReader
     private readonly string $bytes;
     private int $offset;
 
-    public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $tag = null)
+    public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $expectedTag = null)
     {
         if ($encodingRule === AsnEncodingRules::BER) {
             throw new InvalidArgumentException('BER encoding is not supported yet.');
@@ -29,8 +29,8 @@ class AsnReader
         $this->offset = 0;
         $this->encodingRule = $encodingRule;
 
-        $this->tag = $tag !== null && $tag->class !== TagClass::Universal
-            ? AsnTag::specified($tag->class, $this->readByte(), $tag, $tag->constructed)
+        $this->tag = $expectedTag !== null && $expectedTag->class !== TagClass::Universal
+            ? AsnTag::specified($expectedTag->class, $this->readByte(), $expectedTag, $expectedTag->constructed)
             : AsnTag::universal($this->readByte());
         $this->length = $this->readLength();
         $this->headerLength = $this->offset;
