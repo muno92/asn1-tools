@@ -8,9 +8,9 @@ use InvalidArgumentException;
 
 class AsnReader
 {
-    private(set) AsnTag $tag;
-    private(set) int $length;
-    private(set) string $contents;
+    public private(set) AsnTag $tag;
+    public private(set) int $length;
+    public private(set) string $contents;
     private int $headerLength;
     private int $totalLength {
         get => $this->headerLength + $this->length;
