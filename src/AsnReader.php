@@ -8,16 +8,17 @@ use InvalidArgumentException;
 
 class AsnReader
 {
-    public readonly AsnTag $tag;
-    private readonly int $headerLength;
-    public readonly int $length;
+    public AsnTag $tag;
+    private int $headerLength;
+    public int $length;
     private int $totalLength {
         get => $this->headerLength + $this->length;
     }
-    public readonly string $contents;
+    public string $contents;
     private readonly AsnEncodingRules $encodingRule;
     private readonly string $bytes;
     private int $offset;
+    private ?AsnTag $expectedTag;
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $expectedTag = null)
     {
@@ -28,31 +29,43 @@ class AsnReader
         $this->bytes = $bytes;
         $this->offset = 0;
         $this->encodingRule = $encodingRule;
-
-        $this->tag = $expectedTag !== null && $expectedTag->class !== TagClass::Universal
-            ? AsnTag::specified($expectedTag->class, $this->readByte(), $expectedTag, $expectedTag->constructed)
-            : AsnTag::universal($this->readByte());
-        $this->length = $this->readLength();
-        $this->headerLength = $this->offset;
-        $this->contents = substr($bytes, $this->offset, $this->length);
-
-        if (strlen($this->contents) < $this->length) {
-            throw new InvalidArgumentException('Insufficient bytes for ASN.1 contents.');
-        }
+        $this->expectedTag = $expectedTag;
     }
 
     public function readSequence(): AsnReader
     {
-        return new AsnReader($this->readRemainingBytes(), $this->encodingRule);
+        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
+        $reader->readHeader();
+
+        $this->skipParsedBytes($reader);
+
+        return $reader;
     }
 
     public function readSequenceWithTagNumber(AsnTag $tag): AsnReader
     {
-        return new AsnReader($this->readRemainingBytes(), $this->encodingRule, $tag);
+        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule, $tag);
+        $reader->readHeader();
+
+        $this->skipParsedBytes($reader);
+
+        return $reader;
+    }
+
+    public function readSetOf(): AsnReader
+    {
+        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
+        $reader->readHeader();
+
+        $this->skipParsedBytes($reader);
+
+        return $reader;
     }
 
     public function readObjectIdentifier(): string
     {
+        $this->readHeader();
+
         $oid = [];
 
         $firstByte = $this->readByte();
@@ -74,6 +87,7 @@ class AsnReader
     public function readInteger(): int
     {
         $integer = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
+        $integer->readHeader();
 
         $firstByte = $integer->readByte();
         $isNegative = ($firstByte & 0x80) !== 0;
@@ -86,12 +100,28 @@ class AsnReader
             $value = ($value << 8) | $integer->readByte();
         }
 
+        $this->skipParsedBytes($integer);
+
         return $value;
     }
 
     public function readByte(): int
     {
         return ord($this->bytes[$this->offset++]);
+    }
+
+    private function readHeader(): void
+    {
+        $this->tag = $this->expectedTag !== null && $this->expectedTag->class !== TagClass::Universal
+            ? AsnTag::specified($this->expectedTag->class, $this->readByte(), $this->expectedTag, $this->expectedTag->constructed)
+            : AsnTag::universal($this->readByte());
+        $this->length = $this->readLength();
+        $this->headerLength = $this->offset;
+        $this->contents = substr($this->bytes, $this->offset, $this->length);
+
+        if (strlen($this->contents) < $this->length) {
+            throw new InvalidArgumentException('Insufficient bytes for ASN.1 contents.');
+        }
     }
 
     private function readLength(): int
@@ -116,6 +146,11 @@ class AsnReader
     private function readRemainingBytes(): string
     {
         return substr($this->bytes, $this->offset);
+    }
+
+    private function skipParsedBytes(AsnReader $parsedContent): void
+    {
+        $this->offset += $parsedContent->totalLength;
     }
 
     /**

@@ -16,9 +16,10 @@ class AsnReaderTest extends TestCase
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
-        $this->assertSame(UniversalTag::SEQUENCE->value, $asnReader->tag->value);
-        $this->assertSame(3405, $asnReader->length);
-        $this->assertSame(3405, strlen($asnReader->contents));
+        $sequence = $asnReader->readSequence();
+        $this->assertSame(UniversalTag::SEQUENCE->value, $sequence->tag->value);
+        $this->assertSame(3405, $sequence->length);
+        $this->assertSame(3405, strlen($sequence->contents));
     }
 
     public function testBerEncodingNotSupported(): void
@@ -32,7 +33,6 @@ class AsnReaderTest extends TestCase
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
 
-        $this->assertSame(UniversalTag::OBJECT_IDENTIFIER->value, $sequence->tag->value);
         $this->assertSame('1.2.840.113549.1.7.2', $sequence->readObjectIdentifier());
     }
 
@@ -77,5 +77,22 @@ class AsnReaderTest extends TestCase
         $version = $signedData->readInteger();
 
         $this->assertSame(1, $version);
+    }
+
+    public function testReadSetOf(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $digestAlgorithmIdentifiers = $signedData
+            ->readSetOf()
+            ->readSequence()
+            ->readObjectIdentifier();
+
+        $this->assertSame('2.16.840.1.101.3.4.2.1', $digestAlgorithmIdentifiers);
     }
 }
