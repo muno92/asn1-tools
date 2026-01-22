@@ -8,13 +8,13 @@ use InvalidArgumentException;
 
 class AsnReader
 {
-    public AsnTag $tag;
+    private(set) AsnTag $tag;
+    private(set) int $length;
+    private(set) string $contents;
     private int $headerLength;
-    public int $length;
     private int $totalLength {
         get => $this->headerLength + $this->length;
     }
-    public string $contents;
     private readonly AsnEncodingRules $encodingRule;
     private readonly string $bytes;
     private int $offset;
