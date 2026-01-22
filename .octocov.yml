@@ -2,6 +2,7 @@ coverage:
   paths:
     - coverage.xml
   badge:
+    if: is_pull_request
     path: coverage.svg
 push:
 codeToTestRatio:
