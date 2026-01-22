@@ -16,6 +16,5 @@ diff:
 comment:
   if: is_pull_request
 report:
-  if: is_pull_request
   datastores:
     - artifact://${GITHUB_REPOSITORY}
