@@ -65,4 +65,17 @@ class AsnReaderTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $sequence->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 1, true));
     }
+
+    public function testReadSignedDataVersion(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $version = $signedData->readInteger();
+
+        $this->assertSame(1, $version);
+    }
 }

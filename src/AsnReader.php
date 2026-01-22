@@ -71,7 +71,25 @@ class AsnReader
         return implode('.', $oid);
     }
 
-    private function readByte(): int
+    public function readInteger(): int
+    {
+        $integer = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
+
+        $firstByte = $integer->readByte();
+        $isNegative = ($firstByte & 0x80) !== 0;
+        if ($isNegative) {
+            throw new \UnexpectedValueException('Negative integers are not supported now.');
+        }
+
+        $value = $firstByte;
+        for ($i = 1; $i < $integer->length; $i++) {
+            $value = ($value << 8) | $integer->readByte();
+        }
+
+        return $value;
+    }
+
+    public function readByte(): int
     {
         return ord($this->bytes[$this->offset++]);
     }
