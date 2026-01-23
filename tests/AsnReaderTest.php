@@ -8,6 +8,7 @@ use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use BadMethodCallException;
+use BcMath\Number;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -94,7 +95,7 @@ class AsnReaderTest extends TestCase
         $signedData = $content->readSequence();
         $version = $signedData->readInteger();
 
-        $this->assertSame(1, $version);
+        $this->assertEquals(new Number('1'), $version);
     }
 
     public function testReadIntegerForNonIntegerObject(): void
@@ -156,5 +157,27 @@ class AsnReaderTest extends TestCase
 
         $this->expectException(BadMethodCallException::class);
         $asnReader->readNull();
+    }
+
+    public function testReadBigInteger(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $signedData->readSetOf();
+        $signedData->readSequence();
+
+        $certificateSet = $signedData->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $certificate = $certificateSet->readSequence();
+        $tbsCertificate = $certificate->readSequence();
+
+        $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $serialNumber = $tbsCertificate->readInteger();
+
+        $this->assertEquals(new Number('116642482170122253773863463039760007017'), $serialNumber);
     }
 }

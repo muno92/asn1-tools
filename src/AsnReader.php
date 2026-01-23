@@ -6,6 +6,7 @@ use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use BadMethodCallException;
+use BcMath\Number;
 use InvalidArgumentException;
 use UnexpectedValueException;
 
@@ -77,7 +78,13 @@ class AsnReader
         return implode('.', $oid);
     }
 
-    public function readInteger(): int
+    /**
+     * Reads an INTEGER value from the ASN.1 encoded data.
+     * * Integers are returned as BcMath\Number to accommodate large values that may exceed PHP's integer limits.
+     *
+     * @return Number
+     */
+    public function readInteger(): Number
     {
         $integer = $this->readNextObject(AsnTag::universal(UniversalTag::INTEGER->value));
 
@@ -87,9 +94,9 @@ class AsnReader
             throw new UnexpectedValueException('Negative integers are not supported now.');
         }
 
-        $value = $firstByte;
+        $value = new Number($firstByte);
         for ($i = 1; $i < $integer->length; $i++) {
-            $value = ($value << 8) | $integer->readByte();
+            $value = $value * 256 + new Number($integer->readByte());
         }
 
         return $value;
