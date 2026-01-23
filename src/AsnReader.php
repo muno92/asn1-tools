@@ -95,10 +95,9 @@ class AsnReader
         }
 
         $value = new Number($firstByte);
-        for ($i = 1; $i < $integer->length; $i++) {
+        while (!$integer->isEOC) {
             $value = $value * 256 + new Number($integer->readByte());
         }
-
         return $value;
     }
 
