@@ -143,16 +143,6 @@ class AsnReader
         return $length;
     }
 
-    private function readRemainingBytes(): string
-    {
-        return substr($this->bytes, $this->offset);
-    }
-
-    private function skipParsedBytes(AsnReader $parsedContent): void
-    {
-        $this->offset += $parsedContent->totalLength;
-    }
-
     /**
      * Checks if the given length is in short form.
      * (In short form, bit 8 is 0, indicating the length is represented in a single byte.)
@@ -163,5 +153,15 @@ class AsnReader
     private function lengthIsShortForm(int $length): bool
     {
         return ($length & 0x80) === 0;
+    }
+
+    private function readRemainingBytes(): string
+    {
+        return substr($this->bytes, $this->offset);
+    }
+
+    private function skipParsedBytes(AsnReader $parsedContent): void
+    {
+        $this->offset += $parsedContent->totalLength;
     }
 }
