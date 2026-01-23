@@ -19,6 +19,9 @@ class AsnReader
     private readonly string $bytes;
     private int $offset;
     private ?AsnTag $expectedTag;
+    private bool $isEOC {
+        get => $this->offset === $this->totalLength;
+    }
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $expectedTag = null)
     {
@@ -49,18 +52,18 @@ class AsnReader
 
     public function readObjectIdentifier(): string
     {
-        $this->readHeader();
+        $objectIdentifier = $this->readNextObject();
 
         $oid = [];
 
-        $firstByte = $this->readByte();
+        $firstByte = $objectIdentifier->readByte();
         $oid[] = intdiv($firstByte, 40);
         $oid[] = $firstByte % 40;
 
-        while ($this->offset < $this->totalLength) {
+        while (!$objectIdentifier->isEOC) {
             $value = 0;
             do {
-                $byte = $this->readByte();
+                $byte = $objectIdentifier->readByte();
                 $value = ($value << 7) | ($byte & 0x7F);
             } while (($byte & 0x80) !== 0);
             $oid[] = $value;
