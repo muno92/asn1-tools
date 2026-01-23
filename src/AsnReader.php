@@ -91,7 +91,7 @@ class AsnReader
         $firstByte = $integer->readByte();
         $isNegative = ($firstByte & 0x80) !== 0;
         if ($isNegative) {
-            throw new UnexpectedValueException('Negative integers are not supported now.');
+            throw new UnexpectedValueException('Negative integers are not supported yet.');
         }
 
         $value = new Number($firstByte);
