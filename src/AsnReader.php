@@ -4,6 +4,8 @@ namespace Asn1Tools;
 
 use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
+use Asn1Tools\Tag\UniversalTag;
+use BadMethodCallException;
 use InvalidArgumentException;
 
 class AsnReader
@@ -37,7 +39,9 @@ class AsnReader
 
     public function readSequence(): AsnReader
     {
-        return $this->readNextObject();
+        $nextObject = $this->readNextObject(AsnTag::universal(UniversalTag::SEQUENCE->value));
+
+        return $nextObject;
     }
 
     public function readSequenceWithTagNumber(AsnTag $tag): AsnReader
@@ -47,12 +51,12 @@ class AsnReader
 
     public function readSetOf(): AsnReader
     {
-        return $this->readNextObject();
+        return $this->readNextObject(AsnTag::universal(UniversalTag::SET->value));
     }
 
     public function readObjectIdentifier(): string
     {
-        $objectIdentifier = $this->readNextObject();
+        $objectIdentifier = $this->readNextObject(AsnTag::universal(UniversalTag::OBJECT_IDENTIFIER->value));
 
         $oid = [];
 
@@ -74,7 +78,7 @@ class AsnReader
 
     public function readInteger(): int
     {
-        $integer = $this->readNextObject();
+        $integer = $this->readNextObject(AsnTag::universal(UniversalTag::INTEGER->value));
 
         $firstByte = $integer->readByte();
         $isNegative = ($firstByte & 0x80) !== 0;
@@ -92,7 +96,7 @@ class AsnReader
 
     public function readNull(): void
     {
-        $this->readNextObject();
+        $this->readNextObject(AsnTag::universal(UniversalTag::NULL->value));
     }
 
     public function readByte(): int
@@ -145,10 +149,11 @@ class AsnReader
         return ($length & 0x80) === 0;
     }
 
-    private function readNextObject(?AsnTag $expectedTag = null): AsnReader
+    private function readNextObject(AsnTag $expectedTag): AsnReader
     {
         $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule, $expectedTag);
         $reader->readHeader();
+        $reader->validateTag($expectedTag);
 
         $this->skipParsedBytes($reader);
 
@@ -163,5 +168,16 @@ class AsnReader
     private function skipParsedBytes(AsnReader $parsedContent): void
     {
         $this->offset += $parsedContent->totalLength;
+    }
+
+    private function validateTag(AsnTag $expectedTag): void
+    {
+        if ($this->tag->value !== $expectedTag->value) {
+            throw new BadMethodCallException(sprintf(
+                'Expected tag number %d, but got %d',
+                $expectedTag->value,
+                $this->tag->value,
+            ));
+        }
     }
 }
