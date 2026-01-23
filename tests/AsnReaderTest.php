@@ -95,4 +95,24 @@ class AsnReaderTest extends TestCase
 
         $this->assertSame('2.16.840.1.101.3.4.2.1', $digestAlgorithmIdentifiers);
     }
+
+    public function testReadNull(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $digestAlgorithmSet = $signedData
+            ->readSetOf()
+            ->readSequence();
+
+        $digestAlgorithmSet->readObjectIdentifier();
+        $digestAlgorithmSet->readNull();
+
+        // Check that no exception is thrown
+        $this->assertTrue(true);
+    }
 }

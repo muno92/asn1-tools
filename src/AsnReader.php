@@ -87,6 +87,11 @@ class AsnReader
         return $value;
     }
 
+    public function readNull(): void
+    {
+        $this->readNextObject();
+    }
+
     public function readByte(): int
     {
         return ord($this->bytes[$this->offset++]);
