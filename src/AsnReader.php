@@ -7,6 +7,7 @@ use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use BadMethodCallException;
 use InvalidArgumentException;
+use UnexpectedValueException;
 
 class AsnReader
 {
@@ -83,7 +84,7 @@ class AsnReader
         $firstByte = $integer->readByte();
         $isNegative = ($firstByte & 0x80) !== 0;
         if ($isNegative) {
-            throw new \UnexpectedValueException('Negative integers are not supported now.');
+            throw new UnexpectedValueException('Negative integers are not supported now.');
         }
 
         $value = $firstByte;

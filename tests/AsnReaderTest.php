@@ -7,6 +7,7 @@ use Asn1Tools\AsnReader;
 use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
+use BadMethodCallException;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -27,7 +28,7 @@ class AsnReaderTest extends TestCase
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $sequence->readSequence();
     }
 
@@ -49,7 +50,7 @@ class AsnReaderTest extends TestCase
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $asnReader->readObjectIdentifier();
     }
 
@@ -100,7 +101,7 @@ class AsnReaderTest extends TestCase
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $asnReader->readInteger();
     }
 
@@ -125,7 +126,7 @@ class AsnReaderTest extends TestCase
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $asnReader->readSetOf();
     }
 
@@ -153,7 +154,7 @@ class AsnReaderTest extends TestCase
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
-        $this->expectException(\BadMethodCallException::class);
+        $this->expectException(BadMethodCallException::class);
         $asnReader->readNull();
     }
 }
