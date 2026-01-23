@@ -34,32 +34,17 @@ class AsnReader
 
     public function readSequence(): AsnReader
     {
-        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
-        $reader->readHeader();
-
-        $this->skipParsedBytes($reader);
-
-        return $reader;
+        return $this->readNextObject();
     }
 
     public function readSequenceWithTagNumber(AsnTag $tag): AsnReader
     {
-        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule, $tag);
-        $reader->readHeader();
-
-        $this->skipParsedBytes($reader);
-
-        return $reader;
+        return $this->readNextObject($tag);
     }
 
     public function readSetOf(): AsnReader
     {
-        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
-        $reader->readHeader();
-
-        $this->skipParsedBytes($reader);
-
-        return $reader;
+        return $this->readNextObject();
     }
 
     public function readObjectIdentifier(): string
@@ -86,8 +71,7 @@ class AsnReader
 
     public function readInteger(): int
     {
-        $integer = new AsnReader($this->readRemainingBytes(), $this->encodingRule);
-        $integer->readHeader();
+        $integer = $this->readNextObject();
 
         $firstByte = $integer->readByte();
         $isNegative = ($firstByte & 0x80) !== 0;
@@ -99,8 +83,6 @@ class AsnReader
         for ($i = 1; $i < $integer->length; $i++) {
             $value = ($value << 8) | $integer->readByte();
         }
-
-        $this->skipParsedBytes($integer);
 
         return $value;
     }
@@ -153,6 +135,16 @@ class AsnReader
     private function lengthIsShortForm(int $length): bool
     {
         return ($length & 0x80) === 0;
+    }
+
+    private function readNextObject(?AsnTag $expectedTag = null): AsnReader
+    {
+        $reader = new AsnReader($this->readRemainingBytes(), $this->encodingRule, $expectedTag);
+        $reader->readHeader();
+
+        $this->skipParsedBytes($reader);
+
+        return $reader;
     }
 
     private function readRemainingBytes(): string
