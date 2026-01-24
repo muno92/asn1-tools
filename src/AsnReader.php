@@ -7,6 +7,7 @@ use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use BadMethodCallException;
 use BcMath\Number;
+use Generator;
 use InvalidArgumentException;
 use UnexpectedValueException;
 
@@ -60,22 +61,25 @@ class AsnReader
     {
         $objectIdentifier = $this->readNextObject(AsnTag::universal(UniversalTag::OBJECT_IDENTIFIER->value));
 
-        $oid = [];
+        $subIdentifiers = [];
+        $subIdentifier = 0;
+        foreach ($objectIdentifier->enumerateContentBytes() as $i => $byte) {
+            if ($i === 0) {
+                $subIdentifiers[] = intdiv($byte, 40);
+                $subIdentifiers[] = $byte % 40;
+                continue;
+            }
 
-        $firstByte = $objectIdentifier->readByte();
-        $oid[] = intdiv($firstByte, 40);
-        $oid[] = $firstByte % 40;
+            $subIdentifier = ($subIdentifier << 7) | ($byte & 0x7F);
 
-        while (!$objectIdentifier->isEOC) {
-            $value = 0;
-            do {
-                $byte = $objectIdentifier->readByte();
-                $value = ($value << 7) | ($byte & 0x7F);
-            } while (($byte & 0x80) !== 0);
-            $oid[] = $value;
+            $isEndOfSubIdentifier = ($byte & 0x80) === 0;
+            if ($isEndOfSubIdentifier) {
+                $subIdentifiers[] = $subIdentifier;
+                $subIdentifier = 0;
+            }
         }
 
-        return implode('.', $oid);
+        return implode('.', $subIdentifiers);
     }
 
     /**
@@ -88,16 +92,20 @@ class AsnReader
     {
         $integer = $this->readNextObject(AsnTag::universal(UniversalTag::INTEGER->value));
 
-        $firstByte = $integer->readByte();
-        $isNegative = ($firstByte & 0x80) !== 0;
-        if ($isNegative) {
-            throw new UnexpectedValueException('Negative integers are not supported yet.');
+        $value = new Number(0);
+        foreach ($integer->enumerateContentBytes() as $i => $byte) {
+            if ($i === 0) {
+                $isNegative = ($byte & 0x80) !== 0;
+                if ($isNegative) {
+                    throw new UnexpectedValueException('Negative integers are not supported yet.');
+                }
+
+                $value = new Number($byte);
+                continue;
+            }
+            $value = $value * 256 + new Number($byte);
         }
 
-        $value = new Number($firstByte);
-        while (!$integer->isEOC) {
-            $value = $value * 256 + new Number($integer->readByte());
-        }
         return $value;
     }
 
@@ -106,7 +114,14 @@ class AsnReader
         $this->readNextObject(AsnTag::universal(UniversalTag::NULL->value));
     }
 
-    public function readByte(): int
+    public function enumerateContentBytes(): Generator
+    {
+        while (!$this->isEOC) {
+            yield $this->readByte();
+        }
+    }
+
+    private function readByte(): int
     {
         return ord($this->bytes[$this->offset++]);
     }
