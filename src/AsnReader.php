@@ -109,6 +109,11 @@ class AsnReader
         $this->readNextObject(AsnTag::universal(UniversalTag::NULL->value));
     }
 
+    public function readCharacterString(UniversalTag $stringTag): string
+    {
+        return $this->readNextObject(AsnTag::universal($stringTag->value))->contents;
+    }
+
     public function enumerateContentBytes(): Generator
     {
         while (!$this->isEOC) {
