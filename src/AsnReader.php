@@ -42,9 +42,7 @@ class AsnReader
 
     public function readSequence(): AsnReader
     {
-        $nextObject = $this->readNextObject(AsnTag::universal(UniversalTag::SEQUENCE->value));
-
-        return $nextObject;
+        return $this->readNextObject(AsnTag::universal(UniversalTag::SEQUENCE->value));
     }
 
     public function readSequenceWithTagNumber(AsnTag $tag): AsnReader
