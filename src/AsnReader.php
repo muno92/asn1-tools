@@ -7,6 +7,7 @@ use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use BadMethodCallException;
 use BcMath\Number;
+use DateTimeImmutable;
 use Generator;
 use InvalidArgumentException;
 use UnexpectedValueException;
@@ -112,6 +113,19 @@ class AsnReader
     public function readCharacterString(UniversalTag $stringTag): string
     {
         return $this->readNextObject(AsnTag::universal($stringTag->value))->contents;
+    }
+
+    public function readUtcTime(): DateTimeImmutable
+    {
+        // In DER encoding, UTC Time is encoded as YYMMDDHHMMSSZ
+        $dateTime = DateTimeImmutable::createFromFormat(
+            '!ymdHis\Z',
+            $this->readNextObject(AsnTag::universal(UniversalTag::UTC_TIME->value))->contents
+        );
+        if (!$dateTime) {
+            throw new UnexpectedValueException('Invalid UTC Time format.');
+        }
+        return $dateTime;
     }
 
     public function enumerateContentBytes(): Generator
