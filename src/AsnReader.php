@@ -128,6 +128,20 @@ class AsnReader
         return $dateTime;
     }
 
+    public function readBitString(): BitString
+    {
+        $bitString = $this->readNextObject(AsnTag::universal(UniversalTag::BIT_STRING->value));
+        $unusedBits = 0;
+        foreach ($bitString->enumerateContentBytes() as $i => $byte) {
+            if ($i === 0) {
+                $unusedBits = $byte;
+                break;
+            }
+        }
+        $bitStringBytes = substr($bitString->contents, 1);
+        return new BitString($bitStringBytes, $unusedBits);
+    }
+
     public function enumerateContentBytes(): Generator
     {
         while (!$this->isEOC) {
