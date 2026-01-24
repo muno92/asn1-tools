@@ -202,10 +202,42 @@ class AsnReaderTest extends TestCase
         $tbsCertificate->readSequence();
 
         $issuer = $tbsCertificate->readSequence();
-        $issuerName = $issuer->readSetOf()->readSequence();
-        $issuerName->readObjectIdentifier();
-        $commonName = $issuerName->readCharacterString(UniversalTag::UTF8_STRING);
+        $partOfIssuerName = $issuer->readSetOf()->readSequence();
+        $partOfIssuerName->readObjectIdentifier();
+        $commonName = $partOfIssuerName->readCharacterString(UniversalTag::UTF8_STRING);
 
         $this->assertSame('Apple Worldwide Developer Relations Certification Authority', $commonName);
+    }
+
+    public function testReadPrintableString(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $signedData->readSetOf();
+        $signedData->readSequence();
+
+        $certificateSet = $signedData->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $certificate = $certificateSet->readSequence();
+        $tbsCertificate = $certificate->readSequence();
+
+        $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $tbsCertificate->readInteger();
+        $tbsCertificate->readSequence();
+
+        $issuer = $tbsCertificate->readSequence();
+        $issuer->readSetOf();
+        $issuer->readSetOf();
+        $issuer->readSetOf();
+
+        $partOfIssuerName = $issuer->readSetOf()->readSequence();
+        $partOfIssuerName->readObjectIdentifier();
+        $countryName = $partOfIssuerName->readCharacterString(UniversalTag::PRINTABLE_STRING);
+
+        $this->assertSame('US', $countryName);
     }
 }
