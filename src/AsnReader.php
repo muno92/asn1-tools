@@ -99,9 +99,6 @@ class AsnReader
                 if ($isNegative) {
                     throw new UnexpectedValueException('Negative integers are not supported yet.');
                 }
-
-                $value = new Number($byte);
-                continue;
             }
             $value = $value * 256 + new Number($byte);
         }
