@@ -4,6 +4,7 @@ namespace Asn1Tools\Tag;
 
 enum UniversalTag: int
 {
+    case BOOLEAN = 0x01;
     case INTEGER = 0x02;
     case BIT_STRING = 0x03;
     case NULL = 0x05;

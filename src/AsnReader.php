@@ -142,6 +142,15 @@ class AsnReader
         return new BitString($bitStringBytes, $unusedBits);
     }
 
+    public function readBoolean(): bool
+    {
+        $boolean = $this->readNextObject(AsnTag::universal(UniversalTag::BOOLEAN->value));
+        foreach ($boolean->enumerateContentBytes() as $byte) {
+            return $byte === 0xFF;
+        }
+        return false;
+    }
+
     public function enumerateContentBytes(): Generator
     {
         while (!$this->isEOC) {

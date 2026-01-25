@@ -299,4 +299,36 @@ class AsnReaderTest extends TestCase
         $this->assertsame(270, strlen($publicKeyBitString->bytes));
         $this->assertsame(0, $publicKeyBitString->unusedBits);
     }
+
+    public function testReadBoolean(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $signedData->readSetOf();
+        $signedData->readSequence();
+
+        $certificateSet = $signedData->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $certificate = $certificateSet->readSequence();
+        $tbsCertificate = $certificate->readSequence();
+
+        $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $tbsCertificate->readInteger();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+
+        $extensions = $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 3, true))->readSequence();
+        $extension = $extensions->readSequence();
+        $extension->readObjectIdentifier();
+        $critical = $extension->readBoolean();
+
+        $this->assertTrue($critical);
+    }
 }
