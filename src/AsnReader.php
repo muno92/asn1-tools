@@ -142,6 +142,12 @@ class AsnReader
         return new BitString($bitStringBytes, $unusedBits);
     }
 
+    public function readOctetString(): string
+    {
+        $octetString = $this->readNextObject(AsnTag::universal(UniversalTag::OCTET_STRING->value));
+        return $octetString->contents;
+    }
+
     public function readBoolean(): bool
     {
         $boolean = $this->readNextObject(AsnTag::universal(UniversalTag::BOOLEAN->value));

@@ -7,6 +7,7 @@ enum UniversalTag: int
     case BOOLEAN = 0x01;
     case INTEGER = 0x02;
     case BIT_STRING = 0x03;
+    case OCTET_STRING = 0x04;
     case NULL = 0x05;
     case OBJECT_IDENTIFIER = 0x06;
     case UTF8_STRING = 0x0C;
