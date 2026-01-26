@@ -131,15 +131,10 @@ class AsnReader
     public function readBitString(): BitString
     {
         $bitString = $this->readNextObject(AsnTag::universal(UniversalTag::BIT_STRING->value));
-        $unusedBits = 0;
-        foreach ($bitString->enumerateContentBytes() as $i => $byte) {
-            if ($i === 0) {
-                $unusedBits = $byte;
-                break;
-            }
-        }
-        $bitStringBytes = substr($bitString->contents, 1);
-        return new BitString($bitStringBytes, $unusedBits);
+        return new BitString(
+            substr($bitString->contents, 1),
+            $bitString->readByte()
+        );
     }
 
     public function readOctetString(): string
@@ -150,11 +145,8 @@ class AsnReader
 
     public function readBoolean(): bool
     {
-        $boolean = $this->readNextObject(AsnTag::universal(UniversalTag::BOOLEAN->value));
-        foreach ($boolean->enumerateContentBytes() as $byte) {
-            return $byte === 0xFF;
-        }
-        return false;
+        $firstByte = $this->readNextObject(AsnTag::universal(UniversalTag::BOOLEAN->value))->readByte();
+        return $firstByte === 0xFF;
     }
 
     public function enumerateContentBytes(): Generator
@@ -164,7 +156,7 @@ class AsnReader
         }
     }
 
-    private function readByte(): int
+    public function readByte(): int
     {
         return ord($this->bytes[$this->offset++]);
     }
