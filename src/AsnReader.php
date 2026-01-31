@@ -128,6 +128,19 @@ class AsnReader
         return $dateTime;
     }
 
+    public function readGeneralizedTime(): DateTimeImmutable
+    {
+        // In DER encoding, UTC Time is encoded as YYYYMMDDHHMMSSZ
+        $dateTime = DateTimeImmutable::createFromFormat(
+            '!YmdHis\Z',
+            $this->readNextObject(AsnTag::universal(UniversalTag::GENERALIZED_TIME->value))->contents
+        );
+        if (!$dateTime) {
+            throw new UnexpectedValueException('Invalid Generalized Time format.');
+        }
+        return $dateTime;
+    }
+
     public function readBitString(): BitString
     {
         $bitString = $this->readNextObject(AsnTag::universal(UniversalTag::BIT_STRING->value));

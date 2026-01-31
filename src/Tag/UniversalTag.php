@@ -14,6 +14,7 @@ enum UniversalTag: int
     case PRINTABLE_STRING = 0x13;
     case IA5_STRING = 0x16;
     case UTC_TIME = 0x17;
+    case GENERALIZED_TIME = 0x18;
     case SEQUENCE = 0x30;
     case SET = 0x31;
 }

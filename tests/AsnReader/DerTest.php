@@ -431,4 +431,18 @@ class DerTest extends TestCase
         $this->assertSame('2.5.4.8', $stateOrProvinceName->readObjectIdentifier());
         $this->assertSame('Kanagawa', $stateOrProvinceName->readCharacterString(UniversalTag::UTF8_STRING));
     }
+
+    public function testReadGeneralizedTime(): void
+    {
+        $sequence = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/sample-cert-contains-generalized-time.der'), AsnEncodingRules::DER)->readSequence()->readSequence();
+
+        $sequence->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $sequence->readInteger();
+        $sequence->readSequence();
+        $sequence->readSequence();
+
+        $validity = $sequence->readSequence();
+        $validity->readUtcTime();
+        $this->assertEquals(new DateTimeImmutable('2076-01-19 06:02:47+0000'), $validity->readGeneralizedTime());
+    }
 }
