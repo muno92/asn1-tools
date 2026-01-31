@@ -12,6 +12,7 @@ enum UniversalTag: int
     case OBJECT_IDENTIFIER = 0x06;
     case UTF8_STRING = 0x0C;
     case PRINTABLE_STRING = 0x13;
+    case IA5_STRING = 0x16;
     case UTC_TIME = 0x17;
     case SEQUENCE = 0x30;
     case SET = 0x31;

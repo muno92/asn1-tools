@@ -365,4 +365,48 @@ class AsnReaderTest extends TestCase
         $this->assertsame(0x30, ord($octetString[0]));
         $this->assertsame(0, ord($octetString[1]));
     }
+
+    public function testReadIA5String(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $signedData->readSetOf();
+        $signedData->readSequence();
+
+        $certificateSet = $signedData->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $certificate = $certificateSet->readSequence();
+        $tbsCertificate = $certificate->readSequence();
+
+        $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $tbsCertificate->readInteger();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+
+        $extensions = $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 3, true))->readSequence();
+        $extensions->readSequence();
+        $extensions->readSequence();
+        $extensions->readSequence();
+
+        $extension = $extensions->readSequence();
+        $extension->readObjectIdentifier();
+        $octetString = $extension->readOctetString();
+
+        $innerSequenceReader = new AsnReader($octetString, AsnEncodingRules::DER)->readSequence()->readSequence();
+        $innerSequenceReader->readObjectIdentifier();
+        $sequence2 = $innerSequenceReader->readSequence();
+        $sequence2->readSequence();
+
+        $sequence3 = $sequence2->readSequence();
+        $sequence3->readObjectIdentifier();
+
+        $this->assertSame('https://www.apple.com/certificateauthority/', $sequence3->readCharacterString(UniversalTag::IA5_STRING));
+    }
 }
