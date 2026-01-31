@@ -1,6 +1,6 @@
 <?php
 
-namespace Asn1Tools\Tests;
+namespace Asn1Tools\Tests\AsnReader;
 
 use Asn1Tools\AsnEncodingRules;
 use Asn1Tools\AsnReader;
@@ -13,11 +13,11 @@ use DateTimeImmutable;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
-class AsnReaderTest extends TestCase
+class DerTest extends TestCase
 {
     public function testReadFirstSequence(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $sequence = $asnReader->readSequence();
         $this->assertSame(UniversalTag::SEQUENCE->value, $sequence->tag->value);
@@ -27,7 +27,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadSequenceForNonSequenceObject(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
 
         $this->expectException(BadMethodCallException::class);
@@ -37,12 +37,12 @@ class AsnReaderTest extends TestCase
     public function testBerEncodingNotSupported(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
+        new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::BER);
     }
 
     public function testReadSequenceObjectIdentifier(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
 
         $this->assertSame('1.2.840.113549.1.7.2', $sequence->readObjectIdentifier());
@@ -50,7 +50,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadObjectIdentifierForNonObjectIdentifierObject(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $this->expectException(BadMethodCallException::class);
         $asnReader->readObjectIdentifier();
@@ -58,7 +58,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadContentWithTagNumber(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
         $sequence->readObjectIdentifier();
 
@@ -68,7 +68,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadContentWithInvalidTagClass(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
         $sequence->readObjectIdentifier();
 
@@ -78,7 +78,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadContentWithInvalidTagNumber(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $sequence = $asnReader->readSequence();
         $sequence->readObjectIdentifier();
 
@@ -88,7 +88,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadSignedDataVersion(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -101,7 +101,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadIntegerForNonIntegerObject(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $this->expectException(BadMethodCallException::class);
         $asnReader->readInteger();
@@ -109,7 +109,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadSetOf(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -126,7 +126,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadSetOfForNonSetObject(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $this->expectException(BadMethodCallException::class);
         $asnReader->readSetOf();
@@ -134,7 +134,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadNull(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -154,7 +154,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadNullForNonNullObject(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
 
         $this->expectException(BadMethodCallException::class);
         $asnReader->readNull();
@@ -162,7 +162,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadBigInteger(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -184,7 +184,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadUTF8String(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -212,7 +212,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadPrintableString(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -244,7 +244,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadUtcTime(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -271,7 +271,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadBitString(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -302,7 +302,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadBoolean(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -334,7 +334,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadOctetString(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
@@ -368,7 +368,7 @@ class AsnReaderTest extends TestCase
 
     public function testReadIA5String(): void
     {
-        $asnReader = new AsnReader(file_get_contents(__DIR__ . '/fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);
         $contentInfo = $asnReader->readSequence();
         $contentInfo->readObjectIdentifier();
         $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
