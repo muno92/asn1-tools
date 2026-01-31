@@ -409,4 +409,26 @@ class DerTest extends TestCase
 
         $this->assertSame('https://www.apple.com/certificateauthority/', $sequence3->readCharacterString(UniversalTag::IA5_STRING));
     }
+
+    public function testReadPrivateKey(): void
+    {
+        $sequence = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/sample-private-key.der'), AsnEncodingRules::DER)->readSequence();
+
+        $this->assertEquals(new Number('0'), $sequence->readInteger());
+        $this->assertSame('1.2.840.113549.1.1.1', $sequence->readSequence()->readObjectIdentifier());
+    }
+
+    public function testReadCsr(): void
+    {
+        $sequence = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/sample-csr.der'), AsnEncodingRules::DER)->readSequence()->readSequence();
+        $sequence->readInteger();
+
+        $issuer = $sequence->readSequence();
+        $issuer->readSetOf();
+
+        $stateOrProvinceName = $issuer->readSetOf()->readSequence();
+
+        $this->assertSame('2.5.4.8', $stateOrProvinceName->readObjectIdentifier());
+        $this->assertSame('Kanagawa', $stateOrProvinceName->readCharacterString(UniversalTag::UTF8_STRING));
+    }
 }
