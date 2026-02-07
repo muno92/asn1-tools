@@ -31,10 +31,6 @@ class AsnReader
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $expectedTag = null)
     {
-        if ($encodingRule === AsnEncodingRules::BER) {
-            throw new InvalidArgumentException('BER encoding is not supported yet.');
-        }
-
         $this->bytes = $bytes;
         $this->offset = 0;
         $this->encodingRule = $encodingRule;
