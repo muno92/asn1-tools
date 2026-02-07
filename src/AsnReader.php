@@ -28,6 +28,7 @@ class AsnReader
     private bool $isEOC {
         get => $this->offset === $this->totalLength;
     }
+    private bool $isIndefinite;
 
     public function __construct(string $bytes, AsnEncodingRules $encodingRule, ?AsnTag $expectedTag = null)
     {
@@ -35,6 +36,7 @@ class AsnReader
         $this->offset = 0;
         $this->encodingRule = $encodingRule;
         $this->expectedTag = $expectedTag;
+        $this->isIndefinite = false;
     }
 
     public function readSequence(): AsnReader
@@ -187,6 +189,14 @@ class AsnReader
     private function readLength(): int
     {
         $firstLengthByte = $this->readByte();
+
+        if ($firstLengthByte === 0x80) {
+            if ($this->encodingRule !== AsnEncodingRules::BER) {
+                throw new InvalidArgumentException('Indefinite lengths are only allowed in BER encoding.');
+            }
+            $this->isIndefinite = true;
+            return 0;
+        }
 
         if ($this->lengthIsShortForm($firstLengthByte)) {
             return $firstLengthByte;

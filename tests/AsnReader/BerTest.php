@@ -4,6 +4,7 @@ namespace Asn1Tools\Tests\AsnReader;
 
 use Asn1Tools\AsnEncodingRules;
 use Asn1Tools\AsnReader;
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
 class BerTest extends TestCase
@@ -14,5 +15,13 @@ class BerTest extends TestCase
         $sequence = $asnReader->readSequence();
 
         $this->assertSame('1.2.840.113549.1.7.2', $sequence->readObjectIdentifier());
+    }
+
+    public function testReadBerAsDer(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.ber'), AsnEncodingRules::DER);
+        $asnReader->readSequence();
     }
 }
