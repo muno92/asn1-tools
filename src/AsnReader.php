@@ -66,7 +66,15 @@ class AsnReader
 
     public function readSetOf(): AsnReader
     {
-        return $this->readNextObject(AsnTag::universal(UniversalTag::SET->value));
+        $set = $this->readNextObject(AsnTag::universal(UniversalTag::SET->value));
+
+        if (!$set->isIndefinite) {
+            return $set;
+        }
+
+        $this->skipIndefiniteChildren($set);
+
+        return $set;
     }
 
     public function readObjectIdentifier(): string
