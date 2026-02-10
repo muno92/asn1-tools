@@ -139,6 +139,8 @@ class AsnReader
     public function readUtcTime(): DateTimeImmutable
     {
         // In DER encoding, UTC Time is encoded as YYMMDDHHMMSSZ
+        // In BER encoding, seconds may be omitted, and the time zone may be specified differently.
+        // But RFC5280 (X.509) requires a DER format, so this is enough for now.
         $dateTime = DateTimeImmutable::createFromFormat(
             '!ymdHis\Z',
             $this->readNextObject(AsnTag::universal(UniversalTag::UTC_TIME->value))->contents

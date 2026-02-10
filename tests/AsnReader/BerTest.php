@@ -8,6 +8,7 @@ use Asn1Tools\Tag\AsnTag;
 use Asn1Tools\Tag\TagClass;
 use Asn1Tools\Tag\UniversalTag;
 use BcMath\Number;
+use DateTimeImmutable;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -74,5 +75,32 @@ class BerTest extends TestCase
         $commonName->readObjectIdentifier();
 
         $this->assertSame('Apple Worldwide Developer Relations Certification Authority', $commonName->readCharacterString(UniversalTag::UTF8_STRING));
+    }
+
+    public function testReadUTCTime(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.ber'), AsnEncodingRules::BER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $signedData->readSetOf();
+        $signedData->readSequence();
+
+        $certificateSet = $signedData->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $certificate = $certificateSet->readSequence();
+        $tbsCertificate = $certificate->readSequence();
+
+        $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $tbsCertificate->readInteger();
+        $tbsCertificate->readSequence();
+        $tbsCertificate->readSequence();
+
+        $validity = $tbsCertificate->readSequence();
+        $notBefore = $validity->readUtcTime();
+
+        $this->assertEquals(new DateTimeImmutable('2024-08-22 09:39:23+0000'), $notBefore);
     }
 }
