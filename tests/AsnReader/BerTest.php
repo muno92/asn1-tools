@@ -4,6 +4,9 @@ namespace Asn1Tools\Tests\AsnReader;
 
 use Asn1Tools\AsnEncodingRules;
 use Asn1Tools\AsnReader;
+use Asn1Tools\Tag\AsnTag;
+use Asn1Tools\Tag\TagClass;
+use BcMath\Number;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 
@@ -23,5 +26,28 @@ class BerTest extends TestCase
 
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.ber'), AsnEncodingRules::DER);
         $asnReader->readSequence();
+    }
+
+    public function testReadIndefiniteLengthSequence(): void
+    {
+        $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.ber'), AsnEncodingRules::BER);
+        $contentInfo = $asnReader->readSequence();
+        $contentInfo->readObjectIdentifier();
+        $content = $contentInfo->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+
+        $signedData = $content->readSequence();
+        $signedData->readInteger();
+        $signedData->readSetOf();
+        // This sequence has an indefinite length encoding
+        $signedData->readSequence();
+
+        $certificateSet = $signedData->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $certificate = $certificateSet->readSequence();
+        $tbsCertificate = $certificate->readSequence();
+
+        $tbsCertificate->readSequenceWithTagNumber(AsnTag::fromEachBits(TagClass::ContextSpecific, 0, true));
+        $serialNumber = $tbsCertificate->readInteger();
+
+        $this->assertEquals(new Number('136556853852351620597131812378341834969'), $serialNumber);
     }
 }

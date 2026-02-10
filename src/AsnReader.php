@@ -18,7 +18,7 @@ class AsnReader
     public private(set) int $length;
     public private(set) string $contents;
     private int $headerLength;
-    private int $totalLength {
+    public int $totalLength {
         get => $this->headerLength + $this->length;
     }
     private readonly AsnEncodingRules $encodingRule;
@@ -41,12 +41,27 @@ class AsnReader
 
     public function readSequence(): AsnReader
     {
-        return $this->readNextObject(AsnTag::universal(UniversalTag::SEQUENCE->value));
+        $sequence = $this->readNextObject(AsnTag::universal(UniversalTag::SEQUENCE->value));
+
+        if (!$sequence->isIndefinite) {
+            return $sequence;
+        }
+        $this->skipIndefiniteChildren($sequence);
+
+        return $sequence;
     }
 
     public function readSequenceWithTagNumber(AsnTag $tag): AsnReader
     {
-        return $this->readNextObject($tag);
+        $sequence = $this->readNextObject($tag);
+
+        if (!$sequence->isIndefinite) {
+            return $sequence;
+        }
+
+        $this->skipIndefiniteChildren($sequence);
+
+        return $sequence;
     }
 
     public function readSetOf(): AsnReader
@@ -255,5 +270,51 @@ class AsnReader
                 $this->tag->value,
             ));
         }
+    }
+
+    /**
+     * @param AsnReader $sequence
+     * @return void
+     */
+    private function skipIndefiniteChildren(AsnReader $sequence): void
+    {
+        $sequence->parseIndefiniteChildren();
+
+        // Update parent offset to skip children + EOC (2 bytes)
+        $this->offset += $sequence->length + 2;
+    }
+
+    private function parseIndefiniteChildren(): void
+    {
+        $childrenLength = 0;
+        $remaining = $this->readRemainingBytes();
+
+        while (true) {
+            // Check for EOC (End of Contents): 00 00
+            if (strlen($remaining) >= 2 && ord($remaining[0]) === 0x00 && ord($remaining[1]) === 0x00) {
+                break;
+            }
+
+            // Determine the expected tag from the first byte
+            $tagByte = ord($remaining[0]);
+            $tagClass = TagClass::from(($tagByte >> 6) & 0b11);
+            $constructed = ($tagByte & 0b100000) !== 0;
+            $expectedTag = AsnTag::fromEachBits($tagClass, $tagByte & 0x1F, $constructed);
+
+            // Parse the child element to determine its length
+            $childReader = new AsnReader($remaining, $this->encodingRule, $expectedTag);
+            $childReader->readHeader();
+
+            if ($childReader->isIndefinite) {
+                $childReader->parseIndefiniteChildren();
+            }
+
+            $childTotalLength = $childReader->totalLength;
+            $childrenLength += $childTotalLength;
+            $remaining = substr($remaining, $childTotalLength);
+        }
+
+        $this->length = $childrenLength;
+        $this->contents = substr($this->bytes, $this->offset, $this->length);
     }
 }
