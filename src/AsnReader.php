@@ -153,7 +153,7 @@ class AsnReader
 
     public function readGeneralizedTime(): DateTimeImmutable
     {
-        // In DER encoding, UTC Time is encoded as YYYYMMDDHHMMSSZ
+        // In DER encoding, Generalized Time is encoded as YYYYMMDDHHMMSSZ
         $dateTime = DateTimeImmutable::createFromFormat(
             '!YmdHis\Z',
             $this->readNextObject(AsnTag::universal(UniversalTag::GENERALIZED_TIME->value))->contents
