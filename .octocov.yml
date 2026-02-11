@@ -4,6 +4,7 @@ coverage:
   badge:
     path: coverage.svg
 push:
+  if: is_pull_request
 codeToTestRatio:
   code:
     - src/**/*.php
