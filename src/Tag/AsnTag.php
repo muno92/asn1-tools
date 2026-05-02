@@ -50,7 +50,7 @@ readonly class AsnTag
     public static function fromEachBits(TagClass $tagClass, int $tagNumber, bool $constructed = false): AsnTag
     {
         // First 2 bits: Tag Class, 3rd bit: Constructed, Last 5 bits: Tag Number
-        $byte = $tagClass->value << 6 | ($constructed ? 0b0010_0000 : 0b0000_0000) | ($tagNumber & 0x1F);
+        $byte = $tagClass->value << 6 | ($constructed ? 0b0010_0000 : 0b0000_0000) | $tagNumber;
 
         return new AsnTag($tagClass, $byte, $constructed);
     }
