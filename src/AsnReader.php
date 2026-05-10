@@ -25,7 +25,7 @@ class AsnReader
     private readonly string $bytes;
     private int $offset;
     private ?AsnTag $expectedTag;
-    private bool $isEOC {
+    public bool $isEOC {
         get => $this->offset === $this->totalLength;
     }
     private bool $isIndefinite;
