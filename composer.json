@@ -1,5 +1,20 @@
 {
     "name": "muno92/asn1-tools",
+    "description": "ASN.1 reader and writer (BER/DER) for PHP",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "asn1",
+        "ber",
+        "der",
+        "x509",
+        "pem"
+    ],
+    "authors": [
+        {
+            "name": "muno92"
+        }
+    ],
     "require": {
         "php": ">=8.5",
         "ext-bcmath": "*"
