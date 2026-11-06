@@ -13,7 +13,7 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v6.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref || github.ref_name }}
@@ -65,7 +65,7 @@ jobs:
       actions: read
 
     steps:
-      - uses: actions/checkout@v6.1.0
+      - uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
           ref: ${{ github.head_ref || github.ref_name }}
