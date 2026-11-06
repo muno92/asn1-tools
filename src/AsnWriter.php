@@ -95,7 +95,7 @@ class AsnWriter
         $contents = '';
         do {
             [$value, $byte] = $value->divmod(256);
-            $contents = chr((int) $byte->value) . $contents;
+            $contents = chr((int) $byte->value & 0xFF) . $contents;
         } while ($value > 0);
 
         // The leading bit is the sign bit, so a positive integer starting with 1 needs a leading 0x00
@@ -167,6 +167,9 @@ class AsnWriter
         return $this;
     }
 
+    /**
+     * @param int<0, max> $length
+     */
     private function encodeLength(int $length): string
     {
         // Short form: a single byte with bit 8 set to 0
@@ -179,8 +182,12 @@ class AsnWriter
         // This is enough because $length is the strlen() of the contents, which never exceeds PHP_INT_MAX.
         // Leading zero bytes are trimmed since DER requires the minimum number of length bytes.
         $lengthBytes = ltrim(pack('J', $length), "\x00");
+        $lengthBytesCount = strlen($lengthBytes);
+        if ($lengthBytesCount > 126) {
+            throw new InvalidArgumentException('Length exceeds the maximum encodable size.');
+        }
 
-        return chr(0x80 | strlen($lengthBytes)) . $lengthBytes;
+        return chr(0x80 | $lengthBytesCount) . $lengthBytes;
     }
 
     /**

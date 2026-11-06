@@ -4,8 +4,15 @@ namespace Asn1Tools\Tag;
 
 readonly class AsnTag
 {
-    private function __construct(public TagClass $class, public int $value, public bool $constructed = false)
+    /** @var int<0, 255> */
+    public int $value;
+
+    private function __construct(public TagClass $class, int $value, public bool $constructed = false)
     {
+        if ($value < 0 || $value > 0xFF) {
+            throw new \InvalidArgumentException(sprintf('Tag must be a single byte, but got %d.', $value));
+        }
+        $this->value = $value;
     }
 
     public static function universal(int $byte, bool $constructed = false): AsnTag
