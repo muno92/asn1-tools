@@ -1,0 +1,25 @@
+# Workflow for gh-actions-lock. Detects when:
+# - .github/workflows/actions.lock is out of sync with the workflows
+# - a pinned commit can no longer be verified upstream
+
+name: verify-lockfile
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v6.1.0
+        with:
+          persist-credentials: false
+      - run: gh extension install github/gh-actions-lock --pin v0.4.0
+      - run: gh actions-lock --verify
