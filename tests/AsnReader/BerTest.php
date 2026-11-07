@@ -53,6 +53,20 @@ class BerTest extends TestCase
         $this->assertEquals(new Number('136556853852351620597131812378341834969'), $serialNumber);
     }
 
+    public function testReadElementSkipsIndefiniteLengthElement(): void
+    {
+        // SEQUENCE (indefinite) { INTEGER 5 } EOC, followed by NULL
+        $asnReader = new AsnReader("\x30\x80\x02\x01\x05\x00\x00\x05\x00", AsnEncodingRules::BER);
+
+        $sequence = $asnReader->readElement();
+        $this->assertSame(UniversalTag::SEQUENCE->value, $sequence->tag->value);
+        $this->assertSame(3, $sequence->length);
+        $this->assertEquals(new Number(5), $sequence->readInteger());
+
+        $asnReader->readNull();
+        $this->addToAssertionCount(1);
+    }
+
     public function testReadSignerInfo(): void
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.ber'), AsnEncodingRules::BER);
