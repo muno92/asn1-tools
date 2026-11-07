@@ -25,6 +25,43 @@ class DerTest extends TestCase
         $this->assertSame(3405, strlen($sequence->contents));
     }
 
+    public function testReadElementReadsAnyUniversalTagInOrder(): void
+    {
+        $asnReader = new AsnReader("\x02\x02\x01\x2C\x05\x00", AsnEncodingRules::DER);
+
+        $integer = $asnReader->readElement();
+        $this->assertSame(UniversalTag::INTEGER->value, $integer->tag->value);
+        $this->assertSame(2, $integer->headerLength);
+        $this->assertSame(2, $integer->length);
+        $this->assertSame("\x01\x2C", $integer->contents);
+
+        $null = $asnReader->readElement();
+        $this->assertSame(UniversalTag::NULL->value, $null->tag->value);
+        $this->assertSame(0, $null->length);
+    }
+
+    public function testReadElementReadsContextSpecificTag(): void
+    {
+        $asnReader = new AsnReader("\xA0\x03\x02\x01\x05", AsnEncodingRules::DER);
+
+        $element = $asnReader->readElement();
+
+        $this->assertSame(TagClass::ContextSpecific, $element->tag->class);
+        $this->assertSame(0xA0, $element->tag->value);
+        $this->assertEquals(new Number(5), $element->readInteger());
+    }
+
+    public function testReadElementWithLongFormLength(): void
+    {
+        $asnReader = new AsnReader("\x04\x81\xC8" . str_repeat('a', 200), AsnEncodingRules::DER);
+
+        $element = $asnReader->readElement();
+
+        $this->assertSame(3, $element->headerLength);
+        $this->assertSame(200, $element->length);
+        $this->assertSame(203, $element->totalLength);
+    }
+
     public function testReadSequenceForNonSequenceObject(): void
     {
         $asnReader = new AsnReader(file_get_contents(__DIR__ . '../../fixtures/pkcs7-signed-data.der'), AsnEncodingRules::DER);

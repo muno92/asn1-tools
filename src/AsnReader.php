@@ -17,7 +17,7 @@ class AsnReader
     public private(set) AsnTag $tag;
     public private(set) int $length;
     public private(set) string $contents;
-    private int $headerLength;
+    public private(set) int $headerLength;
     public int $totalLength {
         get => $this->headerLength + $this->length;
     }
@@ -37,6 +37,22 @@ class AsnReader
         $this->encodingRule = $encodingRule;
         $this->expectedTag = $expectedTag;
         $this->isIndefinite = false;
+    }
+
+    /**
+     * Reads the next element whatever its tag is, e.g. to inspect its tag, length and contents.
+     * Works for any tag class, including context-specific tags such as [0].
+     */
+    public function readElement(): AsnReader
+    {
+        $element = $this->readNextObject($this->tagFromFirstByte($this->readRemainingBytes()));
+
+        if (!$element->isIndefinite) {
+            return $element;
+        }
+        $this->skipIndefiniteChildren($element);
+
+        return $element;
     }
 
     public function readSequence(): AsnReader
@@ -294,6 +310,18 @@ class AsnReader
         $this->offset += $sequence->length + 2;
     }
 
+    /**
+     * Builds the tag that the first byte of the given bytes stands for.
+     */
+    private function tagFromFirstByte(string $bytes): AsnTag
+    {
+        $tagByte = ord($bytes[0]);
+        $tagClass = TagClass::from(($tagByte >> 6) & 0b11);
+        $constructed = ($tagByte & 0b100000) !== 0;
+
+        return AsnTag::fromEachBits($tagClass, $tagByte & 0x1F, $constructed);
+    }
+
     private function parseIndefiniteChildren(): void
     {
         $childrenLength = 0;
@@ -305,14 +333,8 @@ class AsnReader
                 break;
             }
 
-            // Determine the expected tag from the first byte
-            $tagByte = ord($remaining[0]);
-            $tagClass = TagClass::from(($tagByte >> 6) & 0b11);
-            $constructed = ($tagByte & 0b100000) !== 0;
-            $expectedTag = AsnTag::fromEachBits($tagClass, $tagByte & 0x1F, $constructed);
-
             // Parse the child element to determine its length
-            $childReader = new AsnReader($remaining, $this->encodingRule, $expectedTag);
+            $childReader = new AsnReader($remaining, $this->encodingRule, $this->tagFromFirstByte($remaining));
             $childReader->readHeader();
 
             if ($childReader->isIndefinite) {

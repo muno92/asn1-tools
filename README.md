@@ -49,6 +49,17 @@ $sequence->readCharacterString(UniversalTag::UTF8_STRING); // 'hello'
 
 Integers are returned as `BcMath\Number` so that large values are not truncated.
 
+To inspect an element without knowing its type, use `readElement()`:
+
+```php
+$element = new AsnReader("\x02\x02\x01\x2C", AsnEncodingRules::DER)->readElement();
+
+$element->tag->value;    // 0x02 (INTEGER)
+$element->headerLength;  // 2 (tag + length bytes)
+$element->length;        // 2
+$element->contents;      // "\x01\x2C"
+```
+
 ### PEM
 
 ```php
